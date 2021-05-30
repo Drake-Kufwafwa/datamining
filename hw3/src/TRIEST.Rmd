@@ -1,0 +1,117 @@
+---
+title: "HW03: Approximate Triangle Counting from Data Stream"
+author: "Drake Kufwafwa"
+date: "5/7/2021"
+output: pdf_document
+---
+
+````{r setup, include=FALSE}
+knitr::opts_chunk$set(   # This is for later! Don't worry about it now. 
+  echo = FALSE,          # Don't show code.
+  warning = FALSE,       # Don't show warnings.
+  message = FALSE,       # Don't show messages (less serious warnings).
+  fig.align = "center"
+)
+
+library(tidyverse)       # Load libraries you always use here.
+library(kableExtra)
+library(cowplot)
+library(devtools)
+library(reshape2)
+library(gridExtra)
+```
+
+
+
+```{r }
+tablify <- function(file = "") {
+  numbers <- read.table(file, header = FALSE)
+  vec <- numbers$V1
+  vec <- as.numeric(vec) #[ ifelse(vec!="END", TRUE,FALSE)]
+  d1 <- split(vec, ceiling(seq_along(vec)/198110))
+  table <- cbind(d1$`1`,d1$`2`,d1$`3`,d1$`4`,d1$`5`,d1$`6`,d1$`7`,d1$`8`,d1$`9`,d1$`10`,
+                 d1$`10`,d1$`11`,d1$`12`,d1$`13`,d1$`14`,d1$`15`,d1$`16`,d1$`17`,d1$`18`,
+                 d1$`19`,d1$`20`)
+  return(table)
+}
+
+firstQuantile <- function(x) quantile(as.numeric(x), probs = 0.25)
+thirdQuantile <- function(x) quantile(as.numeric(x), probs = 0.75)
+
+createPlotData <- function(table) {
+  table <- as.data.frame(table)
+  minTable <- apply(table, 1, min)
+  firstQTable <- apply(table, 1, firstQuantile)
+  medianTable <- apply(table, 1, median)
+  thirdQTable <- apply(table, 1, thirdQuantile)
+  maxTable <- apply(table, 1, max)
+  aggregated <- as.data.frame(cbind(minTable,firstQTable,medianTable,thirdQTable,maxTable))
+  aggregated <- cbind(aggregated, c(1:nrow(aggregated)))
+  colnames(aggregated) <- c("minimum","FQ","median","TQ","maximum","time")
+  return(aggregated)
+}
+
+plotData <- function(data, title){
+  d <- melt(data, id.vars="time")
+
+  # Everything on the same plot
+  ggplot(d, aes(time,value, col=variable)) + 
+    geom_line() +
+    ylim(0,1600000) +
+    labs(y = "Number of Triangles")+
+    guides(color = guide_legend(override.aes = list(size = 3)))
+}
+
+
+createAndPlotData <- function(file, algorithm, sampleSize) {
+  table <- tablify(file)
+  data <- createPlotData(table)
+  plotData(data) +
+    labs(title = paste("Triangle Count vs Time with (",algorithm," and sample size ",sampleSize,")",sep =""))
+}
+
+b <- "TriestBase"
+i <- "TriestImpr"
+```
+
+
+```{r }
+b5 <- createAndPlotData("output5000b.txt",b,5000) 
+i5 <- createAndPlotData("output5000i.txt",i,5000)
+b5
+i5
+```
+\newpage
+
+```{r }
+b10 <- createAndPlotData("output10000b.txt",b,10000) 
+i10 <- createAndPlotData("output10000i.txt",i,10000)
+b10
+i10
+```
+\newpage
+
+
+```{r }
+b20 <- createAndPlotData("output20000b.txt",b,20000) 
+i20 <- createAndPlotData("output20000i.txt",i,20000)
+b20
+i20
+```
+
+\newpage
+
+```{r }
+b30 <- createAndPlotData("output30000b.txt",b,30000)
+i30 <- createAndPlotData("output30000i.txt",i,30000)
+b30
+i30
+```
+\newpage
+
+```{r }
+b40 <- createAndPlotData("output40000b.txt",b,40000) 
+i40 <- createAndPlotData("output40000i.txt",i,40000)
+b40
+i40
+```
